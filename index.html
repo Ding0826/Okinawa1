@@ -1,0 +1,1039 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0"/>
+<title>旅遊小工具 🌊</title>
+<link rel="preconnect" href="https://fonts.googleapis.com"/>
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin/>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@400;500;700&family=Kaisei+Opti:wght@400;700&display=swap" rel="stylesheet"/>
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css"/>
+<script src="https://cdn.tailwindcss.com"></script>
+<script>
+tailwind.config = {
+  theme: {
+    extend: {
+      colors: {
+        ocean: { 50:'#e0f7ff', 100:'#b3edff', 200:'#7ddeff', 300:'#3dceff', 400:'#00bfea', 500:'#009ec2', 600:'#0080a0', 700:'#006280', 800:'#004560', 900:'#002840' },
+        sand:  { 50:'#fffdf5', 100:'#fff8e1', 200:'#ffedb3', 300:'#ffdd80', 400:'#ffc94d', 500:'#f5a623', 600:'#d4881a', 700:'#a86812', 800:'#7c4a0b', 900:'#502e05' },
+        ghibli:{ 50:'#f0fdf4', 100:'#dcfce7', 200:'#bbf7d0', 300:'#86efac', 400:'#4ade80', 500:'#22c55e', 600:'#16a34a', 700:'#15803d', 800:'#166534', 900:'#14532d' },
+        totoro:'#7c9d7e',
+      },
+      fontFamily: {
+        sans: ['"Noto Sans TC"','sans-serif'],
+        display: ['"Kaisei Opti"','serif'],
+      },
+    }
+  }
+}
+</script>
+<style>
+  /* ===== Base ===== */
+  *{box-sizing:border-box}
+  html,body{margin:0;padding:0;background:#e8f8ff;font-family:'Noto Sans TC',sans-serif;color:#1a3040}
+  #app{max-width:480px;margin:0 auto;min-height:100svh;background:#f0fbff;position:relative;padding-bottom:72px}
+
+  /* ===== Header ===== */
+  .app-header{background:linear-gradient(135deg,#0080a0 0%,#00bfea 60%,#7ddeff 100%);padding:14px 16px 10px;color:white;position:sticky;top:0;z-index:50;box-shadow:0 2px 12px rgba(0,128,160,.3)}
+  .app-header h1{font-family:'Kaisei Opti',serif;font-size:20px;font-weight:700;margin:0;letter-spacing:1px}
+  .app-header p{margin:0;font-size:12px;opacity:.85}
+
+  /* ===== Bottom Nav ===== */
+  .bottom-nav{position:fixed;bottom:0;left:50%;transform:translateX(-50%);width:100%;max-width:480px;background:white;border-top:1.5px solid #b3edff;display:flex;z-index:100;box-shadow:0 -4px 16px rgba(0,128,160,.12)}
+  .bottom-nav button{flex:1;padding:8px 0 6px;background:none;border:none;cursor:pointer;font-size:10px;color:#006280;display:flex;flex-direction:column;align-items:center;gap:3px;transition:color .2s,background .2s}
+  .bottom-nav button i{font-size:20px}
+  .bottom-nav button.active{color:#00bfea;background:#e0f7ff}
+  .bottom-nav button span{font-size:10px;font-weight:500}
+
+  /* ===== Page ===== */
+  .page{display:none;padding:14px 14px 8px;animation:fadeIn .22s ease}
+  .page.active{display:block}
+  @keyframes fadeIn{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:translateY(0)}}
+
+  /* ===== Cards ===== */
+  .card{background:white;border-radius:18px;box-shadow:0 4px 18px rgba(0,128,160,.10);padding:14px 16px;margin-bottom:14px}
+  .card-ocean{border-top:4px solid #00bfea}
+  .card-sand{border-top:4px solid #f5a623}
+  .card-ghibli{border-top:4px solid #4ade80}
+
+  /* ===== Timeline ===== */
+  .timeline-day{margin-bottom:18px}
+  .day-header{display:flex;align-items:center;gap:10px;margin-bottom:10px}
+  .day-badge{background:linear-gradient(135deg,#00bfea,#009ec2);color:white;border-radius:12px;padding:4px 12px;font-size:13px;font-weight:700;font-family:'Kaisei Opti',serif;white-space:nowrap}
+  .day-title{font-size:15px;font-weight:700;color:#004560}
+  .timeline-items{border-left:3px solid #b3edff;padding-left:14px;margin-left:6px}
+  .timeline-item{position:relative;padding:8px 0 8px 0;margin-bottom:2px}
+  .timeline-item::before{content:'';position:absolute;left:-19px;top:14px;width:11px;height:11px;background:#00bfea;border-radius:50%;border:2px solid white;box-shadow:0 0 0 2px #7ddeff}
+  .timeline-item.flight::before{background:#f5a623}
+  .timeline-item.hotel::before{background:#4ade80}
+  .timeline-item.important::before{background:#ef4444;box-shadow:0 0 0 3px #fca5a5}
+  .item-name{font-size:14px;font-weight:600;color:#003850}
+  .item-note{font-size:12px;color:#5a7a8a;margin-top:2px}
+  .item-tags{display:flex;flex-wrap:wrap;gap:5px;margin-top:5px}
+  .tag{font-size:11px;padding:2px 8px;border-radius:999px;font-weight:500}
+  .tag-blue{background:#e0f7ff;color:#0080a0}
+  .tag-green{background:#dcfce7;color:#15803d}
+  .tag-orange{background:#fff7ed;color:#c2410c}
+  .tag-red{background:#fee2e2;color:#b91c1c}
+  .map-btn{display:inline-flex;align-items:center;gap:4px;font-size:11px;padding:3px 9px;border-radius:999px;background:#e0f7ff;color:#0080a0;border:none;cursor:pointer;margin-top:4px;text-decoration:none;font-weight:500}
+  .map-btn:hover{background:#00bfea;color:white}
+  .important-badge{background:#ef4444;color:white;font-size:11px;padding:2px 8px;border-radius:999px;font-weight:700}
+
+  /* ===== Hotel Card ===== */
+  .hotel-card{background:linear-gradient(135deg,#e0f7ff,#f0fff4);border-radius:14px;padding:12px 14px;margin-top:6px;border:1.5px solid #b3edff}
+
+  /* ===== Guide ===== */
+  .guide-section{margin-bottom:18px}
+  .guide-section h3{font-family:'Kaisei Opti',serif;font-size:17px;color:#004560;border-left:4px solid #00bfea;padding-left:10px;margin-bottom:8px}
+  .guide-section p{font-size:13.5px;line-height:1.8;color:#2a4050;margin:0 0 6px}
+  .guide-section .tips{background:#fff8e1;border-radius:10px;padding:10px 12px;font-size:12.5px;color:#7c4a0b;margin-top:6px}
+  .guide-section .tips i{color:#f5a623;margin-right:5px}
+  .guide-map{width:100%;height:220px;border-radius:14px;border:2px solid #b3edff;margin-top:8px}
+
+  /* ===== Wallet ===== */
+  .rate-display{display:flex;justify-content:space-between;align-items:center;background:#e0f7ff;border-radius:12px;padding:10px 14px;margin-bottom:10px}
+  .calc-display{background:#001e2e;color:#7ddeff;border-radius:12px;padding:12px;font-size:22px;font-family:monospace;text-align:right;margin-bottom:10px;min-height:52px;word-break:break-all}
+  .calc-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:6px;margin-bottom:10px}
+  .calc-btn{background:white;border:1.5px solid #b3edff;border-radius:10px;padding:13px 0;font-size:17px;font-weight:600;cursor:pointer;color:#003850;transition:all .15s}
+  .calc-btn:hover{background:#e0f7ff;border-color:#00bfea}
+  .calc-btn.op{background:#e0f7ff;color:#0080a0}
+  .calc-btn.eq{background:linear-gradient(135deg,#00bfea,#009ec2);color:white;border-color:#00bfea}
+  .calc-btn.clr{background:#fee2e2;color:#b91c1c;border-color:#fca5a5}
+  .converted{text-align:center;font-size:13px;color:#5a7a8a;margin-bottom:14px}
+  .expense-item-row{display:flex;align-items:center;gap:8px;margin-bottom:10px}
+  .expense-item-row input{flex:1;border:1.5px solid #b3edff;border-radius:10px;padding:9px 12px;font-size:14px;outline:none;font-family:'Noto Sans TC',sans-serif}
+  .expense-item-row input:focus{border-color:#00bfea}
+  .expense-record{display:flex;align-items:center;gap:10px;background:#f8fcff;border-radius:12px;padding:10px 12px;margin-bottom:8px;border:1px solid #e0f7ff}
+  .expense-thumb{width:48px;height:48px;border-radius:8px;object-fit:cover;flex-shrink:0}
+  .expense-thumb-placeholder{width:48px;height:48px;border-radius:8px;background:#e0f7ff;display:flex;align-items:center;justify-content:center;flex-shrink:0}
+  .expense-info{flex:1;min-width:0}
+  .expense-name{font-size:13px;font-weight:600;color:#003850;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  .expense-amount{font-size:12px;color:#0080a0}
+  .expense-total-bar{background:linear-gradient(135deg,#003850,#006280);color:white;border-radius:14px;padding:12px 16px;margin-top:8px;display:flex;justify-content:space-between;align-items:center}
+
+  /* ===== Lists ===== */
+  .checklist-item{display:flex;align-items:center;gap:10px;padding:9px 4px;border-bottom:1px solid #e8f8ff;cursor:pointer}
+  .checklist-item input[type=checkbox]{width:18px;height:18px;accent-color:#00bfea;cursor:pointer;flex-shrink:0}
+  .checklist-item label{font-size:14px;color:#1a3040;cursor:pointer}
+  .checklist-item.checked label{text-decoration:line-through;color:#a0b8c8}
+  .checklist-section-title{font-size:13px;font-weight:700;color:#0080a0;padding:8px 0 4px;border-bottom:2px solid #e0f7ff;margin-bottom:4px;display:flex;align-items:center;gap:6px}
+  .memo-item{display:flex;align-items:flex-start;gap:8px;background:#f8fcff;border-radius:10px;padding:10px 12px;margin-bottom:7px;border:1px solid #e0f7ff}
+  .memo-item p{margin:0;font-size:13.5px;line-height:1.7;word-break:break-all}
+  .memo-item a{color:#0080a0;text-decoration:underline}
+
+  /* ===== Info ===== */
+  .info-link{display:flex;align-items:center;gap:12px;background:white;border-radius:14px;padding:13px 15px;margin-bottom:10px;box-shadow:0 2px 10px rgba(0,128,160,.08);text-decoration:none;color:#1a3040;transition:background .2s}
+  .info-link:hover{background:#e0f7ff}
+  .info-link .icon-circle{width:40px;height:40px;border-radius:50%;display:flex;align-items:center;justify-content:center;flex-shrink:0;font-size:18px}
+  .info-section-title{font-size:14px;font-weight:700;color:#0080a0;margin:14px 0 8px;display:flex;align-items:center;gap:6px}
+  .emergency-card{background:linear-gradient(135deg,#fff1f2,#fff8f0);border:1.5px solid #fca5a5;border-radius:14px;padding:12px 14px;margin-bottom:10px}
+  .emergency-number{font-size:22px;font-weight:700;color:#b91c1c;font-family:'Kaisei Opti',serif}
+  .notice-item{display:flex;gap:10px;padding:8px 0;border-bottom:1px solid #e8f8ff;font-size:13px;line-height:1.6}
+  .notice-item i{color:#f5a623;margin-top:2px;flex-shrink:0}
+
+  /* ===== Dashboard ===== */
+  .dash-stat{background:linear-gradient(135deg,#e0f7ff,#f0fff4);border-radius:16px;padding:14px 16px;text-align:center}
+  .dash-stat-value{font-size:26px;font-weight:700;color:#004560;font-family:'Kaisei Opti',serif}
+  .dash-stat-label{font-size:12px;color:#5a7a8a;margin-top:2px}
+  .progress-bar{height:8px;border-radius:999px;background:#e0f7ff;overflow:hidden;margin-top:6px}
+  .progress-fill{height:100%;background:linear-gradient(90deg,#00bfea,#009ec2);border-radius:999px;transition:width .5s ease}
+
+  /* ===== Totoro Deco ===== */
+  .totoro-deco{font-size:36px;text-align:center;margin:8px 0 4px;animation:float 3s ease-in-out infinite}
+  @keyframes float{0%,100%{transform:translateY(0)}50%{transform:translateY(-6px)}}
+
+  /* ===== Rent Car ===== */
+  .rent-card{background:linear-gradient(135deg,#fffdf5,#fff8e1);border:1.5px solid #ffc94d;border-radius:16px;padding:14px 16px;margin-bottom:12px}
+  .rent-card h4{font-family:'Kaisei Opti',serif;color:#7c4a0b;font-size:15px;margin:0 0 8px}
+
+  /* ===== Tabs (内部子頁) ===== */
+  .inner-tabs{display:flex;gap:6px;margin-bottom:12px;overflow-x:auto;padding-bottom:2px}
+  .inner-tab{flex-shrink:0;padding:6px 14px;border-radius:999px;font-size:13px;font-weight:600;border:1.5px solid #b3edff;background:white;color:#0080a0;cursor:pointer;transition:all .2s}
+  .inner-tab.active{background:#00bfea;color:white;border-color:#00bfea}
+
+  /* ===== Btn ===== */
+  .btn-primary{background:linear-gradient(135deg,#00bfea,#009ec2);color:white;border:none;border-radius:12px;padding:10px 20px;font-size:14px;font-weight:700;cursor:pointer;font-family:'Noto Sans TC',sans-serif;transition:opacity .2s}
+  .btn-primary:hover{opacity:.88}
+  .btn-danger{background:#fee2e2;color:#b91c1c;border:1.5px solid #fca5a5;border-radius:10px;padding:6px 12px;font-size:12px;cursor:pointer;font-family:'Noto Sans TC',sans-serif}
+  .btn-ghost{background:white;border:1.5px solid #b3edff;color:#0080a0;border-radius:10px;padding:8px 14px;font-size:13px;cursor:pointer;font-family:'Noto Sans TC',sans-serif;transition:background .2s}
+  .btn-ghost:hover{background:#e0f7ff}
+
+  /* ===== Rate Editor ===== */
+  .rate-edit-row{display:flex;align-items:center;gap:8px;margin-top:8px}
+  .rate-edit-row input{width:80px;border:1.5px solid #b3edff;border-radius:8px;padding:6px 8px;font-size:14px;text-align:center;outline:none}
+  .rate-edit-row input:focus{border-color:#00bfea}
+
+  /* ===== Wave deco ===== */
+  .wave-divider{width:100%;overflow:hidden;line-height:0;margin-bottom:-4px}
+  .wave-divider svg{display:block;width:100%}
+
+  /* ===== Photo upload ===== */
+  .photo-upload-btn{display:flex;align-items:center;gap:6px;background:#e0f7ff;border:1.5px dashed #00bfea;border-radius:10px;padding:9px 14px;color:#0080a0;font-size:13px;cursor:pointer;font-weight:600;font-family:'Noto Sans TC',sans-serif;width:100%;justify-content:center;margin-bottom:10px;transition:background .2s}
+  .photo-upload-btn:hover{background:#b3edff}
+  canvas{display:none}
+</style>
+</head>
+<body>
+<div id="app">
+
+  <!-- ===== HEADER ===== -->
+  <header class="app-header">
+    <div class="wave-divider" style="position:absolute;bottom:0;left:0;right:0;pointer-events:none">
+      <svg viewBox="0 0 480 12" xmlns="http://www.w3.org/2000/svg" preserveAspectRatio="none" height="12">
+        <path d="M0,6 C80,12 160,0 240,6 C320,12 400,0 480,6 L480,12 L0,12 Z" fill="rgba(255,255,255,0.3)"/>
+      </svg>
+    </div>
+    <div style="display:flex;align-items:center;gap:10px">
+      <span style="font-size:26px">🌊</span>
+      <div>
+        <h1>旅遊小工具</h1>
+        <p>IT728 05/28 16:15 ✈ IT729 06/01 10:30</p>
+      </div>
+    </div>
+  </header>
+
+  <!-- ===== PAGES ===== -->
+
+  <!-- PLAN -->
+  <section id="page-plan" class="page active">
+    <div class="totoro-deco">🐱</div>
+
+    <!-- D1 -->
+    <div class="timeline-day">
+      <div class="day-header">
+        <div class="day-badge">5/28 四</div>
+        <div class="day-title">抵達・國際通</div>
+      </div>
+      <div class="timeline-items">
+        <div class="timeline-item flight">
+          <div class="item-name">✈ IT728 出發</div>
+          <div class="item-note">16:15 起飛 → 18:40 抵達那霸</div>
+          <div class="item-tags">
+            <span class="tag tag-orange">虎航</span>
+            <span class="important-badge">集合重要</span>
+          </div>
+        </div>
+        <div class="timeline-item">
+          <div class="item-name">🛍 國際通</div>
+          <div class="item-note">那霸最熱鬧的購物商店街，約 1.6 公里</div>
+          <div class="item-tags"><span class="tag tag-blue">購物</span><span class="tag tag-green">散步</span></div>
+          <a class="map-btn" href="https://maps.google.com/?q=国際通り+那覇+沖縄" target="_blank"><i class="fa fa-map-marker-alt"></i>Google Maps</a>
+        </div>
+        <div class="timeline-item hotel">
+          <div class="item-name">🏨 那霸休伊特渡假飯店</div>
+          <div class="item-note">ヒューイットリゾート那覇 · +81989438325</div>
+          <a class="map-btn" href="https://maps.google.com/?q=ヒューイットリゾート那覇" target="_blank"><i class="fa fa-map-marker-alt"></i>飯店位置</a>
+        </div>
+      </div>
+    </div>
+
+    <!-- D2 -->
+    <div class="timeline-day">
+      <div class="day-header">
+        <div class="day-badge">5/29 五</div>
+        <div class="day-title">海岸線・製鹽工廠</div>
+      </div>
+      <div class="timeline-items">
+        <div class="timeline-item important">
+          <div class="item-name">🚗 取車</div>
+          <div class="item-note">沖縄行脚レンタカー・預約小祿車站接送</div>
+          <div class="item-tags"><span class="tag tag-red">需帶護照+駕照+日文譯本</span></div>
+        </div>
+        <div class="timeline-item">
+          <div class="item-name">⛩ 波上宮</div>
+          <div class="item-note">沖繩最古老的神社，俯瞰波之上海灘</div>
+          <a class="map-btn" href="https://maps.google.com/?q=波上宮+那覇" target="_blank"><i class="fa fa-map-marker-alt"></i>Google Maps</a>
+        </div>
+        <div class="timeline-item">
+          <div class="item-name">🌉 海中道路</div>
+          <div class="item-note">全長約 4.7 公里的海上公路，景色壯闊</div>
+          <a class="map-btn" href="https://maps.google.com/?q=海中道路+沖縄" target="_blank"><i class="fa fa-map-marker-alt"></i>Google Maps</a>
+        </div>
+        <div class="timeline-item">
+          <div class="item-name">🌊 大埔海岸</div>
+          <div class="item-note">清澈海水，適合踏浪拍照</div>
+          <a class="map-btn" href="https://maps.google.com/?q=大泊海岸+沖縄" target="_blank"><i class="fa fa-map-marker-alt"></i>Google Maps</a>
+        </div>
+        <div class="timeline-item">
+          <div class="item-name">🧂 命御庭 製鹽工廠</div>
+          <div class="item-note">ぬちまーす観光製塩ファクトリー，世界最高礦物質含量海鹽</div>
+          <a class="map-btn" href="https://maps.google.com/?q=ぬちまーす観光製塩ファクトリー" target="_blank"><i class="fa fa-map-marker-alt"></i>Google Maps</a>
+        </div>
+        <div class="timeline-item hotel">
+          <div class="item-name">🏠 Airbnb 讀谷公寓</div>
+          <div class="item-note">今明兩晚住讀谷</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- D3 -->
+    <div class="timeline-day">
+      <div class="day-header">
+        <div class="day-badge">5/30 六</div>
+        <div class="day-title">洞窟・海邊・城跡</div>
+      </div>
+      <div class="timeline-items">
+        <div class="timeline-item">
+          <div class="item-name">🤿 青之洞窟</div>
+          <div class="item-note">恩納村著名浮潛景點，光線折射成湛藍</div>
+          <a class="map-btn" href="https://maps.google.com/?q=青の洞窟+恩納村+沖縄" target="_blank"><i class="fa fa-map-marker-alt"></i>Google Maps</a>
+        </div>
+        <div class="timeline-item">
+          <div class="item-name">🏄 海邊活動</div>
+          <div class="item-note">自由安排海上活動，享受陽光</div>
+        </div>
+        <div class="timeline-item">
+          <div class="item-name">🏯 殘波岬燈塔</div>
+          <div class="item-note">讀谷標誌，岬角白色燈塔絕景</div>
+          <a class="map-btn" href="https://maps.google.com/?q=残波岬灯台+読谷" target="_blank"><i class="fa fa-map-marker-alt"></i>Google Maps</a>
+        </div>
+        <div class="timeline-item">
+          <div class="item-name">🎭 琉球村</div>
+          <div class="item-note">體驗傳統琉球文化・琉球舞蹈・織布</div>
+          <a class="map-btn" href="https://maps.google.com/?q=琉球村+読谷" target="_blank"><i class="fa fa-map-marker-alt"></i>Google Maps</a>
+        </div>
+        <div class="timeline-item">
+          <div class="item-name">🏰 座喜味城</div>
+          <div class="item-note">世界遺產琉球城跡之一，石牆工法精湛</div>
+          <a class="map-btn" href="https://maps.google.com/?q=座喜味城跡+読谷" target="_blank"><i class="fa fa-map-marker-alt"></i>Google Maps</a>
+        </div>
+        <div class="timeline-item hotel">
+          <div class="item-name">🏠 Airbnb 讀谷公寓</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- D4 -->
+    <div class="timeline-day">
+      <div class="day-header">
+        <div class="day-badge">5/31 日</div>
+        <div class="day-title">美國村・返那霸</div>
+      </div>
+      <div class="timeline-items">
+        <div class="timeline-item">
+          <div class="item-name">🌆 美國村</div>
+          <div class="item-note">北谷町美式購物娛樂街區，適合逛街拍照</div>
+          <a class="map-btn" href="https://maps.google.com/?q=美浜アメリカンビレッジ+北谷" target="_blank"><i class="fa fa-map-marker-alt"></i>Google Maps</a>
+        </div>
+        <div class="timeline-item">
+          <div class="item-name">🌮 午餐：Taco Rice</div>
+          <div class="item-note">沖繩特色料理，墨西哥塔可飯融合版</div>
+          <a class="map-btn" href="https://maps.google.com/?q=タコライス+美浜+沖縄" target="_blank"><i class="fa fa-map-marker-alt"></i>食記搜尋</a>
+        </div>
+        <div class="timeline-item important">
+          <div class="item-name">🚗 還車</div>
+          <div class="item-note">還車前加滿油，留下加油收據</div>
+          <div class="item-tags"><span class="tag tag-red">加油收據要留</span></div>
+        </div>
+        <div class="timeline-item hotel">
+          <div class="item-name">🏨 那霸休伊特渡假飯店</div>
+          <div class="item-note">ヒューイットリゾート那覇</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- D5 -->
+    <div class="timeline-day">
+      <div class="day-header">
+        <div class="day-badge">6/1 一</div>
+        <div class="day-title">返程日</div>
+      </div>
+      <div class="timeline-items">
+        <div class="timeline-item flight important">
+          <div class="item-name">✈ IT729 返台</div>
+          <div class="item-note">10:30 那霸出發 → 11:20 抵達</div>
+          <div class="item-tags">
+            <span class="tag tag-orange">虎航</span>
+            <span class="important-badge">提早到機場</span>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- 租車資訊 -->
+    <div class="rent-card">
+      <h4><i class="fa fa-car mr-1"></i> 租車資訊</h4>
+      <div style="font-size:14px;font-weight:600;color:#7c4a0b;margin-bottom:4px">沖縄行脚レンタカー</div>
+      <div style="font-size:13px;color:#5a7a8a;margin-bottom:8px">預約小祿車站接送</div>
+      <div style="font-size:13px;margin-bottom:4px"><b>需帶：</b>護照・台灣駕照・日文譯本</div>
+      <div style="font-size:13px"><b>注意：</b>還車前汽油加滿，加油收據要留</div>
+    </div>
+
+    <!-- 住宿速查 -->
+    <div class="card card-ghibli">
+      <div style="font-size:14px;font-weight:700;color:#166534;margin-bottom:10px"><i class="fa fa-bed" style="margin-right:6px"></i>住宿速查</div>
+      <div class="hotel-card" style="margin-bottom:8px">
+        <div style="font-size:13px;font-weight:700">D1 &amp; D4｜那霸休伊特渡假飯店</div>
+        <div style="font-size:12px;color:#5a7a8a;margin-top:3px">〒902-0067 Okinawa, Naha, Asato, 2 Chome-5-16</div>
+        <div style="font-size:12px;color:#5a7a8a">ヒューイットリゾート那覇</div>
+        <div style="font-size:13px;color:#0080a0;font-weight:600;margin-top:4px"><i class="fa fa-phone" style="margin-right:4px"></i>+81989438325</div>
+        <a class="map-btn" style="margin-top:6px" href="https://maps.google.com/?q=ヒューイットリゾート那覇" target="_blank"><i class="fa fa-map-marker-alt"></i>飯店位置</a>
+      </div>
+      <div class="hotel-card">
+        <div style="font-size:13px;font-weight:700">D2 &amp; D3｜Airbnb 讀谷公寓</div>
+        <div style="font-size:12px;color:#5a7a8a;margin-top:3px">讀谷村・依 Airbnb 確認詳細地址</div>
+      </div>
+    </div>
+  </section>
+
+  <!-- GUIDE -->
+  <section id="page-guide" class="page">
+    <div class="totoro-deco">🌿</div>
+
+    <div class="guide-section card card-ocean">
+      <h3>🌊 青之洞窟</h3>
+      <p>青之洞窟位於沖繩本島中部的恩納村真榮田岬，是日本數一數二的海底奇景。洞窟內陽光透過海面折射，將整個洞窟染成夢幻的湛藍色，彷彿置身於宮崎駿動畫中的神秘世界。</p>
+      <div class="tips"><i class="fa fa-lightbulb"></i><b>小知識：</b>洞窟實際上是古時海蝕形成的海底隧道，最佳潛入時間為晴天上午 10-12 點，光線折射效果最佳。記得帶防水袋保護手機！</div>
+      <iframe class="guide-map" src="https://www.openstreetmap.org/export/embed.html?bbox=127.74,26.38,127.76,26.40&layer=mapnik&marker=26.394,127.752" title="青之洞窟地圖"></iframe>
+    </div>
+
+    <div class="guide-section card card-ocean">
+      <h3>🏯 座喜味城</h3>
+      <p>座喜味城是沖繩世界遺產琉球王國城跡的一員，建於 15 世紀初，以精密的「布積み」石牆工法聞名，拱門造型在琉球城跡中絕無僅有。登上城牆可俯瞰讀谷全景。</p>
+      <div class="tips"><i class="fa fa-lightbulb"></i><b>小知識：</b>座喜味城曾在二戰中被美軍用作雷達基地，戰後才逐步修復。城牆的弓形拱門是琉球最古老的拱門形式。</div>
+      <iframe class="guide-map" src="https://www.openstreetmap.org/export/embed.html?bbox=127.73,26.36,127.75,26.38&layer=mapnik&marker=26.375,127.742" title="座喜味城地圖"></iframe>
+    </div>
+
+    <div class="guide-section card card-ocean">
+      <h3>⛩ 波上宮</h3>
+      <p>波上宮是沖繩縣內最古老、最重要的神社，供奉沖繩固有的「ニライカナイ」神祇信仰，面海而建，背後即是波之上海灘，神社與大海連成壯麗景觀。</p>
+      <div class="tips"><i class="fa fa-lightbulb"></i><b>小知識：</b>ニライカナイ（Nirai Kanai）是琉球古老神話中的海底樂園，被視為幸福與豐饒的來源，類似日本本土的「常世之國」。</div>
+      <iframe class="guide-map" src="https://www.openstreetmap.org/export/embed.html?bbox=127.67,26.21,127.69,26.23&layer=mapnik&marker=26.221,127.681" title="波上宮地圖"></iframe>
+    </div>
+
+    <div class="guide-section card card-sand">
+      <h3>🧂 命御庭 製鹽工廠</h3>
+      <p>「ぬちまーす」在沖繩方言中意指「生命之鹽」，這裡生產的海鹽含有高達 21 種礦物質，被金氏世界紀錄認定為世界上礦物質種類最多的食鹽，採用獨特的「常溫瞬間空中製鹽法」。</p>
+      <div class="tips"><i class="fa fa-lightbulb"></i><b>伴手禮推薦：</b>命御庭鹽可做為特色伴手禮，有入浴鹽、料理鹽等多種選擇。工廠提供免費參觀導覽。</div>
+    </div>
+
+    <div class="guide-section card card-sand">
+      <h3>🌉 海中道路</h3>
+      <p>海中道路是連接沖繩本島與勝連半島的海上公路，全長 4.7 公里，行駛其上，湛藍大海環繞四周，是沖繩最具代表性的兜風路線之一。兩側可見潮間帶生態。</p>
+      <div class="tips"><i class="fa fa-lightbulb"></i><b>拍照時機：</b>退潮時兩側可見大片潮間帶，漲潮時則海面幾乎與路面齊平，景色各有特色。下午光線從西邊照射，拍照逆光效果極美。</div>
+    </div>
+
+    <div class="guide-section card card-ghibli">
+      <h3>🎭 琉球村</h3>
+      <p>琉球村是一座開放式博物館，重現傳統琉球民家聚落，提供織布體驗、琉球舞蹈公演、黑糖製作等文化活動，保存古民家超過 10 棟，是了解琉球傳統生活的好地方。</p>
+      <div class="tips"><i class="fa fa-lightbulb"></i><b>推薦體驗：</b>紅型染布體驗、三線琴體驗都超有趣，可以帶走親手製作的紀念品。舞蹈公演每日數場，免費觀賞。</div>
+    </div>
+
+    <div class="guide-section card card-ghibli">
+      <h3>🌆 美國村（アメリカンビレッジ）</h3>
+      <p>美國村位於北谷町，是二戰後美軍返還土地再開發的商業娛樂區，充滿濃厚美式風情，有大型摩天輪、海景購物中心、各式餐廳，傍晚夕陽景色是沖繩必拍名景。</p>
+      <div class="tips"><i class="fa fa-lightbulb"></i><b>Taco Rice：</b>沖繩的靈魂料理，將墨西哥塔可餡料（碎肉、起司、萵苣、番茄）鋪在白飯上，是由美軍基地旁的墨西哥料理演化而來的獨特沖繩料理。</div>
+    </div>
+  </section>
+
+  <!-- WALLET -->
+  <section id="page-wallet" class="page">
+    <div class="totoro-deco">💰</div>
+
+    <!-- 匯率換算計算機 -->
+    <div class="card card-ocean" style="margin-bottom:14px">
+      <div style="font-size:14px;font-weight:700;color:#004560;margin-bottom:8px"><i class="fa fa-calculator" style="margin-right:6px"></i>匯率換算計算機</div>
+      <div class="rate-display">
+        <span style="font-size:13px;color:#0080a0">1 JPY =</span>
+        <div class="rate-edit-row" style="margin:0">
+          <input type="number" id="rate-input" step="0.001" min="0.001" style="width:72px"/>
+          <span style="font-size:13px;color:#0080a0">TWD</span>
+          <button class="btn-ghost" style="padding:5px 10px;font-size:12px" onclick="saveRate()">儲存</button>
+        </div>
+      </div>
+      <div class="calc-display" id="calc-display">0</div>
+      <div class="converted" id="calc-converted">≈ 0 TWD</div>
+      <div class="calc-grid">
+        <button class="calc-btn" onclick="calcInput('7')">7</button>
+        <button class="calc-btn" onclick="calcInput('8')">8</button>
+        <button class="calc-btn" onclick="calcInput('9')">9</button>
+        <button class="calc-btn op" onclick="calcInput('/')">÷</button>
+        <button class="calc-btn" onclick="calcInput('4')">4</button>
+        <button class="calc-btn" onclick="calcInput('5')">5</button>
+        <button class="calc-btn" onclick="calcInput('6')">6</button>
+        <button class="calc-btn op" onclick="calcInput('*')">×</button>
+        <button class="calc-btn" onclick="calcInput('1')">1</button>
+        <button class="calc-btn" onclick="calcInput('2')">2</button>
+        <button class="calc-btn" onclick="calcInput('3')">3</button>
+        <button class="calc-btn op" onclick="calcInput('-')">−</button>
+        <button class="calc-btn" onclick="calcInput('0')">0</button>
+        <button class="calc-btn" onclick="calcInput('.')">.</button>
+        <button class="calc-btn clr" onclick="calcClear()">C</button>
+        <button class="calc-btn op" onclick="calcInput('+')">+</button>
+        <button class="calc-btn" onclick="calcBackspace()" style="grid-column:span 1">⌫</button>
+        <button class="calc-btn eq" onclick="calcEqual()" style="grid-column:span 3">=</button>
+      </div>
+    </div>
+
+    <!-- 記帳 -->
+    <div class="card card-sand">
+      <div style="font-size:14px;font-weight:700;color:#7c4a0b;margin-bottom:10px"><i class="fa fa-receipt" style="margin-right:6px"></i>記帳</div>
+      <div class="expense-item-row">
+        <input type="text" id="exp-name" placeholder="品項名稱，例：高雄捷運" style="flex:1"/>
+      </div>
+      <div class="expense-item-row">
+        <input type="date" id="exp-date" style="flex:1;border:1.5px solid #b3edff;border-radius:10px;padding:9px 10px;font-size:14px;background:#f8fcff;font-family:'Noto Sans TC',sans-serif"/>
+      </div>
+      <div class="expense-item-row">
+        <input type="number" id="exp-amount" placeholder="金額" style="flex:2;min-width:80px" oninput="autoCalcPreview()"/>
+        <select id="exp-currency" onchange="autoCalcPreview()" style="flex:1;min-width:88px;border:1.5px solid #b3edff;border-radius:10px;padding:9px 6px;font-size:14px;background:#f8fcff;font-family:'Noto Sans TC',sans-serif">
+          <option value="TWD">💵 台幣</option>
+          <option value="JPY">💴 日幣</option>
+        </select>
+      </div>
+      <div id="exp-preview" style="font-size:12px;color:#0080a0;text-align:right;margin:-6px 0 8px;min-height:18px"></div>
+      <label class="photo-upload-btn" for="photo-file">
+        <i class="fa fa-camera"></i> 拍照 / 上傳收據
+      </label>
+      <input type="file" id="photo-file" accept="image/*" capture="environment" style="display:none" onchange="handlePhoto(event)"/>
+      <canvas id="compress-canvas"></canvas>
+      <div id="photo-preview" style="margin-bottom:10px;display:none">
+        <img id="photo-preview-img" style="max-height:80px;border-radius:8px;border:1.5px solid #b3edff"/>
+        <button onclick="clearPhoto()" class="btn-danger" style="margin-left:8px;font-size:11px">移除</button>
+      </div>
+      <button class="btn-primary" style="width:100%;margin-bottom:14px" onclick="addExpense()"><i class="fa fa-plus" style="margin-right:6px"></i>新增花費</button>
+
+      <div id="expense-list"></div>
+
+      <div class="expense-total-bar" id="expense-total-bar">
+        <div style="display:flex;flex-direction:column;align-items:flex-start;gap:2px">
+          <span style="font-size:12px;opacity:.8">💴 日幣小計</span>
+          <span id="total-jpy" style="font-size:20px;font-weight:700">¥0</span>
+        </div>
+        <div style="display:flex;flex-direction:column;align-items:flex-end;gap:2px">
+          <span style="font-size:12px;opacity:.8">💵 台幣總計（含換算）</span>
+          <span id="total-twd" style="font-size:20px;font-weight:700">NT$0</span>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- LISTS -->
+  <section id="page-lists" class="page">
+    <div class="totoro-deco">📋</div>
+
+    <div class="inner-tabs">
+      <button class="inner-tab active" onclick="switchListTab('checklist', this)">行前清單</button>
+      <button class="inner-tab" onclick="switchListTab('memo', this)">備忘錄</button>
+    </div>
+
+    <div id="tab-checklist">
+      <div class="card card-ocean" style="margin-bottom:12px">
+        <div class="checklist-section-title"><i class="fa fa-briefcase"></i> 隨身行李</div>
+        <div id="carry-on-list"></div>
+      </div>
+      <div class="card card-sand">
+        <div class="checklist-section-title"><i class="fa fa-suitcase"></i> 托運行李</div>
+        <div id="checked-bag-list"></div>
+      </div>
+    </div>
+
+    <div id="tab-memo" style="display:none">
+      <div class="card card-ghibli">
+        <div style="font-size:13px;font-weight:700;color:#166534;margin-bottom:8px"><i class="fa fa-sticky-note" style="margin-right:6px"></i>個人備忘錄</div>
+        <div style="display:flex;gap:8px;margin-bottom:10px">
+          <input type="text" id="memo-input" placeholder="輸入備忘或貼上網址..." style="flex:1;border:1.5px solid #b3edff;border-radius:10px;padding:9px 12px;font-size:14px;outline:none;font-family:'Noto Sans TC',sans-serif"/>
+          <button class="btn-primary" onclick="addMemo()"><i class="fa fa-plus"></i></button>
+        </div>
+        <div id="memo-list"></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- INFO -->
+  <section id="page-info" class="page">
+    <div class="totoro-deco">ℹ️</div>
+
+    <div class="info-section-title"><i class="fa fa-cloud-sun"></i> 天氣預報</div>
+    <a class="info-link" href="https://www.jma.go.jp/bosai/forecast/#area_type=offices&area_code=91000" target="_blank">
+      <div class="icon-circle" style="background:#e0f7ff;color:#0080a0"><i class="fa fa-sun"></i></div>
+      <div><div style="font-weight:600">日本氣象廳 沖繩天氣</div><div style="font-size:12px;color:#5a7a8a">jma.go.jp 官方天氣預報</div></div>
+    </a>
+    <a class="info-link" href="https://www.windy.com/?26.2,127.7,7" target="_blank">
+      <div class="icon-circle" style="background:#e0f7ff;color:#00bfea"><i class="fa fa-wind"></i></div>
+      <div><div style="font-weight:600">Windy 風向風速</div><div style="font-size:12px;color:#5a7a8a">沖繩海上活動安全參考</div></div>
+    </a>
+
+    <div class="info-section-title"><i class="fa fa-phone-alt"></i> 緊急聯絡</div>
+    <div class="emergency-card">
+      <div style="font-size:13px;color:#7c0000;font-weight:600;margin-bottom:6px">🇯🇵 日本緊急電話（免費）</div>
+      <div style="display:flex;gap:18px;flex-wrap:wrap">
+        <div><div class="emergency-number">110</div><div style="font-size:12px;color:#7c0000">警察</div></div>
+        <div><div class="emergency-number">119</div><div style="font-size:12px;color:#7c0000">消防・救護車</div></div>
+        <div><div class="emergency-number">118</div><div style="font-size:12px;color:#7c0000">海上保安廳</div></div>
+      </div>
+    </div>
+    <a class="info-link" href="https://www.taiwanembassy.org/jp/index.html" target="_blank">
+      <div class="icon-circle" style="background:#fff1f2;color:#b91c1c"><i class="fa fa-flag"></i></div>
+      <div><div style="font-weight:600">台灣駐日辦事處（東京）</div><div style="font-size:12px;color:#5a7a8a">+81-3-3280-7811 / 緊急 +81-90-4076-4695</div></div>
+    </a>
+    <a class="info-link" href="https://www.ryukyu-ryokosha.com/inquiry/" target="_blank">
+      <div class="icon-circle" style="background:#fff8e1;color:#f5a623"><i class="fa fa-car"></i></div>
+      <div><div style="font-weight:600">沖縄行脚レンタカー</div><div style="font-size:12px;color:#5a7a8a">預約小祿車站接送</div></div>
+    </a>
+
+    <div class="info-section-title"><i class="fa fa-exclamation-triangle"></i> 入出境注意事項</div>
+    <div class="card" style="padding:10px 14px">
+      <div class="notice-item"><i class="fa fa-ban"></i><span><b>違禁品：</b>肉製品（台灣香腸、滷味等）不可攜入日本，違者罰款最高 100 萬日幣。</span></div>
+      <div class="notice-item"><i class="fa fa-ban"></i><span><b>毒品：</b>日本對毒品管制極嚴，含違禁成分的藥品也不可帶入。</span></div>
+      <div class="notice-item"><i class="fa fa-leaf"></i><span><b>植物：</b>帶回台灣的水果蔬菜需申報，部分品項禁止輸入。</span></div>
+      <div class="notice-item"><i class="fa fa-money-bill-wave"></i><span><b>現金：</b>攜帶超過 100 萬日幣（或等值外幣）入出境需申報。</span></div>
+      <div class="notice-item"><i class="fa fa-camera"></i><span><b>神社・寺廟：</b>部分神社禁止室內拍照，留意現場指示。</span></div>
+      <div class="notice-item"><i class="fa fa-swimming-pool"></i><span><b>入場要求：</b>溫泉及部分設施禁止有刺青者入場。</span></div>
+      <div class="notice-item"><i class="fa fa-car"></i><span><b>交通：</b>日本靠左行駛，請特別注意方向。沖繩租車推薦加滿油還車（租車合約確認）。</span></div>
+    </div>
+
+    <div class="info-section-title"><i class="fa fa-wifi"></i> 實用連結</div>
+    <a class="info-link" href="https://www.google.com/maps" target="_blank">
+      <div class="icon-circle" style="background:#e0f7ff;color:#0080a0"><i class="fa fa-map"></i></div>
+      <div><div style="font-weight:600">Google Maps 導航</div></div>
+    </a>
+    <a class="info-link" href="https://www.navitime.co.jp/" target="_blank">
+      <div class="icon-circle" style="background:#dcfce7;color:#15803d"><i class="fa fa-bus"></i></div>
+      <div><div style="font-weight:600">NAVITIME 日本交通查詢</div></div>
+    </a>
+    <a class="info-link" href="https://www.currency.me.uk/convert/jpy/twd" target="_blank">
+      <div class="icon-circle" style="background:#fff8e1;color:#f5a623"><i class="fa fa-yen-sign"></i></div>
+      <div><div style="font-weight:600">JPY→TWD 即時匯率</div></div>
+    </a>
+  </section>
+
+  <!-- DASHBOARD -->
+  <section id="page-dash" class="page">
+    <div class="totoro-deco">🐱</div>
+
+    <div class="card card-ocean">
+      <div style="font-size:14px;font-weight:700;color:#004560;margin-bottom:10px"><i class="fa fa-calendar-day" style="margin-right:6px"></i>今日行程提醒</div>
+      <div id="dash-today-plan" style="font-size:14px;color:#1a3040;line-height:1.8"></div>
+    </div>
+
+    <div class="card card-sand">
+      <div style="font-size:14px;font-weight:700;color:#7c4a0b;margin-bottom:12px"><i class="fa fa-chart-bar" style="margin-right:6px"></i>每日花費統計</div>
+      <canvas id="bar-chart" width="100%" height="160" style="display:block;width:100%;height:160px"></canvas>
+    </div>
+
+    <div class="card card-ghibli">
+      <div style="font-size:14px;font-weight:700;color:#166534;margin-bottom:10px"><i class="fa fa-tasks" style="margin-right:6px"></i>行前清單進度</div>
+      <div class="progress-bar"><div class="progress-fill" id="checklist-progress"></div></div>
+      <div id="checklist-progress-text" style="font-size:13px;color:#5a7a8a;margin-top:6px;text-align:center"></div>
+    </div>
+
+    <div class="card" style="background:linear-gradient(135deg,#f0fdf4,#e0f7ff)">
+      <div style="font-size:14px;font-weight:700;color:#004560;margin-bottom:8px"><i class="fa fa-plane" style="margin-right:6px"></i>航班速查</div>
+      <div style="font-size:13px;color:#1a3040;line-height:2">
+        <div>🛫 <b>去程 IT728</b>：5/28 16:15 → 18:40</div>
+        <div>🛬 <b>回程 IT729</b>：6/1 10:30 → 11:20</div>
+        <div>🏢 <b>航空公司</b>：虎航（Tiger Air Taiwan）</div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ===== BOTTOM NAV ===== -->
+  <nav class="bottom-nav">
+    <button class="active" onclick="switchPage('plan', this)">
+      <i class="fa fa-map-marked-alt"></i><span>PLAN</span>
+    </button>
+    <button onclick="switchPage('guide', this)">
+      <i class="fa fa-book-open"></i><span>GUIDE</span>
+    </button>
+    <button onclick="switchPage('wallet', this)">
+      <i class="fa fa-wallet"></i><span>WALLET</span>
+    </button>
+    <button onclick="switchPage('lists', this)">
+      <i class="fa fa-list-check"></i><span>LISTS</span>
+    </button>
+    <button onclick="switchPage('info', this)">
+      <i class="fa fa-circle-info"></i><span>INFO</span>
+    </button>
+    <button onclick="switchPage('dash', this)">
+      <i class="fa fa-gauge-high"></i><span>DASH</span>
+    </button>
+  </nav>
+
+</div><!-- #app -->
+
+<script>
+// =============================================
+// DATA
+// =============================================
+const CARRY_ON = ['護照','日幣/台幣','行動電源','相機','隱眼','網卡','水壺','筆','各項憑證','耳機','外套','帽子','面紙/濕紙巾','信用卡','駕照/日文譯本'];
+const CHECKED_BAG = ['換洗衣物','鞋子/襪子','充電器','盥洗用具','內衣褲','雨具','延長線','個人藥品','化妝品/保養品','生理用品','防曬用品','行李秤','轉接頭','塑膠袋','小剪刀','衣架','眼鏡(盒)','口罩','棉花棒','其他'];
+
+const TRIP_DAYS = [
+  { date:'2026-05-28', label:'5/28 四', title:'抵達・國際通', items:['✈ IT728 16:15起飛','🛍 國際通散策','🏨 那霸休伊特渡假飯店'] },
+  { date:'2026-05-29', label:'5/29 五', title:'海岸線・製鹽工廠', items:['🚗 取車（小祿車站）','⛩ 波上宮','🌉 海中道路','🌊 大埔海岸','🧂 命御庭 製鹽工廠','🏠 Airbnb讀谷'] },
+  { date:'2026-05-30', label:'5/30 六', title:'洞窟・海邊・城跡', items:['🤿 青之洞窟','🏄 海邊活動','🏯 殘波岬燈塔','🎭 琉球村','🏰 座喜味城','🏠 Airbnb讀谷'] },
+  { date:'2026-05-31', label:'5/31 日', title:'美國村・返那霸', items:['🌆 美國村','🌮 午餐 Taco Rice','🚗 還車（油加滿）','🏨 那霸休伊特渡假飯店'] },
+  { date:'2026-06-01', label:'6/1 一',  title:'返程',           items:['✈ IT729 10:30起飛 → 11:20抵達'] },
+];
+
+// =============================================
+// STORAGE HELPERS
+// =============================================
+const ls = {
+  get: (k, def) => { try { return JSON.parse(localStorage.getItem(k)) ?? def; } catch { return def; } },
+  set: (k, v) => localStorage.setItem(k, JSON.stringify(v)),
+};
+
+// =============================================
+// PAGE NAVIGATION
+// =============================================
+function switchPage(name, btn) {
+  document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+  document.querySelectorAll('.bottom-nav button').forEach(b => b.classList.remove('active'));
+  document.getElementById('page-' + name).classList.add('active');
+  btn.classList.add('active');
+  if (name === 'dash') renderDash();
+}
+
+// =============================================
+// CALCULATOR + CURRENCY
+// =============================================
+let calcExpr = '';
+let currentPhoto = null;
+
+function getRate() { return parseFloat(ls.get('jpy_rate', 0.218)); }
+function saveRate() {
+  const v = parseFloat(document.getElementById('rate-input').value);
+  if (v > 0) { ls.set('jpy_rate', v); updateConvert(); alert('匯率已儲存！'); }
+}
+
+window.addEventListener('DOMContentLoaded', () => {
+  document.getElementById('rate-input').value = getRate();
+});
+
+function calcInput(v) {
+  if (calcExpr.length > 20) return;
+  calcExpr += v;
+  document.getElementById('calc-display').textContent = calcExpr;
+  updateConvert();
+}
+function calcClear() {
+  calcExpr = '';
+  document.getElementById('calc-display').textContent = '0';
+  document.getElementById('calc-converted').textContent = '≈ 0 TWD';
+}
+function calcBackspace() {
+  calcExpr = calcExpr.slice(0, -1);
+  document.getElementById('calc-display').textContent = calcExpr || '0';
+  updateConvert();
+}
+function calcEqual() {
+  try {
+    const result = Function('"use strict"; return (' + calcExpr + ')')();
+    calcExpr = String(Math.round(result * 100) / 100);
+    document.getElementById('calc-display').textContent = calcExpr;
+    updateConvert();
+  } catch { document.getElementById('calc-display').textContent = 'ERR'; calcExpr = ''; }
+}
+function updateConvert() {
+  try {
+    const val = Function('"use strict"; return (' + calcExpr + ')')();
+    const twd = Math.round(val * getRate());
+    document.getElementById('calc-converted').textContent = `≈ ${twd.toLocaleString()} TWD`;
+  } catch { document.getElementById('calc-converted').textContent = ''; }
+}
+
+// =============================================
+// EXPENSE (WALLET)
+// =============================================
+function handlePhoto(event) {
+  const file = event.target.files[0];
+  if (!file) return;
+  const reader = new FileReader();
+  reader.onload = (e) => {
+    const img = new Image();
+    img.onload = () => {
+      const canvas = document.getElementById('compress-canvas');
+      const maxSize = 120;
+      let w = img.width, h = img.height;
+      if (w > h) { if (w > maxSize) { h = h * maxSize / w; w = maxSize; } }
+      else { if (h > maxSize) { w = w * maxSize / h; h = maxSize; } }
+      canvas.width = w; canvas.height = h;
+      canvas.getContext('2d').drawImage(img, 0, 0, w, h);
+      currentPhoto = canvas.toDataURL('image/jpeg', 0.7);
+      document.getElementById('photo-preview-img').src = currentPhoto;
+      document.getElementById('photo-preview').style.display = 'flex';
+      document.getElementById('photo-preview').style.alignItems = 'center';
+    };
+    img.src = e.target.result;
+  };
+  reader.readAsDataURL(file);
+}
+function clearPhoto() {
+  currentPhoto = null;
+  document.getElementById('photo-preview').style.display = 'none';
+  document.getElementById('photo-file').value = '';
+}
+
+function autoCalcPreview() {
+  const amount = parseFloat(document.getElementById('exp-amount').value);
+  const currency = document.getElementById('exp-currency').value;
+  const preview = document.getElementById('exp-preview');
+  if (isNaN(amount) || amount < 0) { preview.textContent = ''; return; }
+  if (currency === 'JPY') {
+    const twd = Math.round(amount * getRate());
+    preview.textContent = `≈ NT$${twd.toLocaleString()} 台幣`;
+  } else {
+    preview.textContent = '';
+  }
+}
+
+function addExpense() {
+  const name = document.getElementById('exp-name').value.trim();
+  const amount = parseFloat(document.getElementById('exp-amount').value);
+  const currency = document.getElementById('exp-currency').value;
+  if (!name || isNaN(amount) || amount < 0) { alert('請填寫品項與金額'); return; }
+  const jpy = currency === 'JPY' ? amount : 0;
+  const twd = currency === 'TWD' ? amount : Math.round(amount * getRate());
+  const list = ls.get('expenses', []);
+  const dateVal = document.getElementById('exp-date').value || new Date().toISOString().slice(0, 10);
+  list.push({ id: Date.now(), name, amount, currency, jpy, twd, photo: currentPhoto, date: dateVal });
+  ls.set('expenses', list);
+  document.getElementById('exp-name').value = '';
+  document.getElementById('exp-amount').value = '';
+  document.getElementById('exp-preview').textContent = '';
+  clearPhoto();
+  renderExpenses();
+  if (document.getElementById('page-dash').classList.contains('active')) renderDash();
+}
+
+function deleteExpense(id) {
+  if (!confirm('確定刪除此筆？')) return;
+  ls.set('expenses', ls.get('expenses', []).filter(e => e.id !== id));
+  renderExpenses();
+  if (document.getElementById('page-dash').classList.contains('active')) renderDash();
+}
+
+function expTwd(e) {
+  if (e.currency === 'TWD') return e.amount || e.twd || 0;
+  if (e.currency === 'JPY') return e.twd != null ? e.twd : Math.round((e.amount || e.jpy || 0) * getRate());
+  return e.twd || 0;
+}
+function expOriginal(e) {
+  if (e.currency === 'JPY') return `💴 ¥${(e.amount || e.jpy || 0).toLocaleString()}`;
+  if (e.currency === 'TWD') return `💵 NT$${(e.amount || e.twd || 0).toLocaleString()}`;
+  return `¥${(e.jpy||0).toLocaleString()}`;
+}
+
+function renderExpenses() {
+  const list = ls.get('expenses', []);
+  const container = document.getElementById('expense-list');
+  if (!list.length) {
+    container.innerHTML = '<div style="text-align:center;color:#a0b8c8;font-size:13px;padding:16px 0">尚無記帳資料</div>';
+    document.getElementById('total-jpy').textContent = '¥0';
+    document.getElementById('total-twd').textContent = 'NT$0';
+    return;
+  }
+  let totalJpy = 0, totalTwd = 0;
+  container.innerHTML = list.map(e => {
+    const twd = expTwd(e);
+    totalTwd += twd;
+    if ((e.currency || 'JPY') === 'JPY') totalJpy += (e.amount || e.jpy || 0);
+    const twdLabel = (e.currency === 'TWD') ? '' : `<span style="color:#5a7a8a;font-size:11px"> ≈ NT$${twd.toLocaleString()}</span>`;
+    const photoHtml = e.photo
+      ? `<img src="${e.photo}" class="expense-thumb" />`
+      : `<div class="expense-thumb-placeholder"><i class="fa fa-receipt" style="color:#b3edff"></i></div>`;
+    return `<div class="expense-record">
+      ${photoHtml}
+      <div class="expense-info">
+        <div class="expense-name">${e.name}</div>
+        <div class="expense-amount">${expOriginal(e)}${twdLabel}</div>
+        <div style="font-size:11px;color:#a0b8c8">${e.date}</div>
+      </div>
+      <button class="btn-danger" onclick="deleteExpense(${e.id})"><i class="fa fa-trash"></i></button>
+    </div>`;
+  }).join('');
+  document.getElementById('total-jpy').textContent = `¥${totalJpy.toLocaleString()}`;
+  document.getElementById('total-twd').textContent = `NT$${totalTwd.toLocaleString()}`;
+}
+
+// =============================================
+// CHECKLIST
+// =============================================
+function buildChecklist(items, storageKey, containerId) {
+  const saved = ls.get(storageKey, {});
+  const container = document.getElementById(containerId);
+  container.innerHTML = items.map((item, i) => {
+    const id = `${storageKey}-${i}`;
+    const checked = !!saved[i];
+    return `<div class="checklist-item ${checked ? 'checked' : ''}" id="ci-${id}">
+      <input type="checkbox" id="${id}" ${checked ? 'checked' : ''} onchange="toggleCheck('${storageKey}',${i},'ci-${id}')"/>
+      <label for="${id}">${item}</label>
+    </div>`;
+  }).join('');
+}
+
+function toggleCheck(key, idx, rowId) {
+  const saved = ls.get(key, {});
+  saved[idx] = !saved[idx];
+  ls.set(key, saved);
+  const row = document.getElementById(rowId);
+  if (saved[idx]) row.classList.add('checked'); else row.classList.remove('checked');
+  updateChecklistProgress();
+}
+
+function updateChecklistProgress() {
+  const all = CARRY_ON.length + CHECKED_BAG.length;
+  const s1 = ls.get('carry_on', {}), s2 = ls.get('checked_bag', {});
+  const done = Object.values(s1).filter(Boolean).length + Object.values(s2).filter(Boolean).length;
+  const pct = Math.round(done / all * 100);
+  const el = document.getElementById('checklist-progress');
+  if (el) el.style.width = pct + '%';
+  const txt = document.getElementById('checklist-progress-text');
+  if (txt) txt.textContent = `已完成 ${done} / ${all} 項（${pct}%）`;
+}
+
+function switchListTab(tab, btn) {
+  document.getElementById('tab-checklist').style.display = tab === 'checklist' ? 'block' : 'none';
+  document.getElementById('tab-memo').style.display = tab === 'memo' ? 'block' : 'none';
+  document.querySelectorAll('.inner-tab').forEach(b => b.classList.remove('active'));
+  btn.classList.add('active');
+}
+
+// =============================================
+// MEMO
+// =============================================
+function addMemo() {
+  const input = document.getElementById('memo-input');
+  const text = input.value.trim();
+  if (!text) return;
+  const memos = ls.get('memos', []);
+  memos.push({ id: Date.now(), text });
+  ls.set('memos', memos);
+  input.value = '';
+  renderMemos();
+}
+
+function deleteMemo(id) {
+  ls.set('memos', ls.get('memos', []).filter(m => m.id !== id));
+  renderMemos();
+}
+
+const URL_RE = /(https?:\/\/[^\s]+)/g;
+function linkify(text) {
+  return text.replace(URL_RE, url => `<a href="${url}" target="_blank">${url}</a>`);
+}
+
+function renderMemos() {
+  const memos = ls.get('memos', []);
+  const container = document.getElementById('memo-list');
+  if (!memos.length) {
+    container.innerHTML = '<div style="text-align:center;color:#a0b8c8;font-size:13px;padding:12px">尚無備忘</div>';
+    return;
+  }
+  container.innerHTML = memos.map(m => `
+    <div class="memo-item">
+      <p>${linkify(m.text)}</p>
+      <button class="btn-danger" onclick="deleteMemo(${m.id})" style="flex-shrink:0"><i class="fa fa-times"></i></button>
+    </div>`).join('');
+}
+
+// =============================================
+// DASHBOARD
+// =============================================
+function renderDash() {
+  const expenses = ls.get('expenses', []);
+  const rate = getRate();
+  const today = new Date().toISOString().slice(0, 10);
+
+  // 今日花費
+  const todayExp = expenses.filter(e => e.date === today);
+
+  // 今日行程
+  const dayPlan = TRIP_DAYS.find(d => d.date === today);
+  const planEl = document.getElementById('dash-today-plan');
+  if (dayPlan) {
+    planEl.innerHTML = `<div style="font-weight:700;color:#004560;margin-bottom:6px">${dayPlan.label} ${dayPlan.title}</div>` +
+      dayPlan.items.map(i => `<div style="padding:3px 0">${i}</div>`).join('');
+  } else {
+    const upcoming = TRIP_DAYS.find(d => d.date > today);
+    planEl.innerHTML = upcoming
+      ? `<div style="color:#5a7a8a">今天不在行程期間。<br>下一個行程：<b>${upcoming.label} ${upcoming.title}</b></div>`
+      : `<div style="color:#5a7a8a">行程已結束，歡迎回家！🏠</div>`;
+  }
+
+  // 進度條
+  updateChecklistProgress();
+
+  // Bar Chart
+  drawBarChart();
+}
+
+function drawBarChart() {
+  const canvas = document.getElementById('bar-chart');
+  if (!canvas) return;
+  const ctx = canvas.getContext('2d');
+  const dpr = window.devicePixelRatio || 1;
+  const W = canvas.clientWidth || 320;
+  const H = 160;
+  canvas.width = W * dpr;
+  canvas.height = H * dpr;
+  ctx.scale(dpr, dpr);
+
+  const expenses = ls.get('expenses', []);
+  const perDay = {};
+  TRIP_DAYS.forEach(d => perDay[d.label] = 0);
+  expenses.forEach(e => {
+    const day = TRIP_DAYS.find(d => d.date === e.date);
+    if (day) perDay[day.label] = (perDay[day.label] || 0) + expTwd(e);
+  });
+  const labels = Object.keys(perDay);
+  const values = Object.values(perDay);
+  const max = Math.max(1, ...values);
+  const pad = 36, bw = (W - pad * 2) / labels.length;
+
+  ctx.clearRect(0, 0, W, H);
+
+  // grid lines
+  ctx.strokeStyle = '#e0f7ff';
+  ctx.lineWidth = 1;
+  [0.25, 0.5, 0.75, 1].forEach(r => {
+    const y = pad + (H - pad * 2) * (1 - r);
+    ctx.beginPath(); ctx.moveTo(pad, y); ctx.lineTo(W - 10, y); ctx.stroke();
+  });
+
+  labels.forEach((label, i) => {
+    const val = values[i];
+    const barH = ((H - pad * 2) * val) / max;
+    const x = pad + i * bw + bw * 0.15;
+    const y = H - pad - barH;
+
+    // bar gradient
+    const grad = ctx.createLinearGradient(0, y, 0, H - pad);
+    grad.addColorStop(0, '#00bfea');
+    grad.addColorStop(1, '#7ddeff');
+    ctx.fillStyle = grad;
+    ctx.beginPath();
+    ctx.roundRect(x, y, bw * 0.7, barH, 4);
+    ctx.fill();
+
+    // label
+    ctx.fillStyle = '#5a7a8a';
+    ctx.font = `10px 'Noto Sans TC',sans-serif`;
+    ctx.textAlign = 'center';
+    ctx.fillText(label.slice(0, 4), x + bw * 0.35, H - pad + 14);
+
+    // value on top
+    if (val > 0) {
+      ctx.fillStyle = '#004560';
+      ctx.font = `bold 10px 'Noto Sans TC',sans-serif`;
+      ctx.fillText(`NT$${(val/1000).toFixed(1)}k`, x + bw * 0.35, y - 4);
+    }
+  });
+}
+
+// =============================================
+// INIT
+// =============================================
+document.addEventListener('DOMContentLoaded', () => {
+  buildChecklist(CARRY_ON, 'carry_on', 'carry-on-list');
+  buildChecklist(CHECKED_BAG, 'checked_bag', 'checked-bag-list');
+  renderExpenses();
+  renderMemos();
+  document.getElementById('rate-input').value = getRate();
+  document.getElementById('exp-date').value = new Date().toISOString().slice(0, 10);
+});
+</script>
+</body>
+</html>
