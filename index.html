@@ -109,7 +109,7 @@
       <span class="text-2xl">🐈</span>
       <div>
         <h1 class="font-bold text-lg leading-tight" style="font-family:'Zen Maru Gothic',sans-serif;">沖繩海島度假</h1>
-        <p class="text-xs opacity-80">Okinawa Escape  2026.5.28~2026.6.1</p>
+        <p class="text-xs opacity-80">Okinawa Escape　2026.5.28 - 2026.6.1</p>
       </div>
     </div>
     <div class="flex flex-col items-end gap-1">
@@ -119,7 +119,7 @@
       </div>
       <div class="flex items-center gap-1 bg-white/20 rounded-full px-2 py-0.5 text-xs backdrop-blur-sm">
         <i class="fa-solid fa-yen-sign text-[10px]"></i>
-        <span>今日: <span id="header-today-expense">0</span></span>
+        <span>今日: ¥<span id="header-today-expense">0</span></span>
       </div>
     </div>
   </div>
@@ -142,8 +142,8 @@
           <span class="text-xs font-bold text-gray-500">去程</span>
         </div>
         <p class="font-bold text-sm">IT728</p>
-        <p class="text-oki-coral font-bold text-base">16:15-18:40</p>
-        <p class="text-xs text-gray-400 mt-0.5">5/28 (四) 高雄  沖繩</p>
+        <p class="text-oki-coral font-bold text-base">16:15 → 18:40</p>
+        <p class="text-xs text-gray-400 mt-0.5">5/28 (四)高雄 → 沖繩</p>
       </div>
       <div class="card p-3">
         <div class="flex items-center gap-2 mb-1">
@@ -151,8 +151,8 @@
           <span class="text-xs font-bold text-gray-500">回程</span>
         </div>
         <p class="font-bold text-sm">IT729</p>
-        <p class="text-oki-ocean font-bold text-base">10:30-11:20</p>
-        <p class="text-xs text-gray-400 mt-0.5">6/1 (一) 沖繩  高雄</p>
+        <p class="text-oki-ocean font-bold text-base">10:30 → 11:20</p>
+        <p class="text-xs text-gray-400 mt-0.5">6/1 (一)　沖繩 → 高雄</p>
       </div>
     </div>
     <div class="card p-4 mb-4">
@@ -205,6 +205,7 @@
           <p class="text-xs text-gray-400">筆</p>
         </div>
       </div>
+      <p id="chart-no-data" class="text-center text-xs text-gray-400 py-6">尚無花費資料，趕快記帳吧 🐾</p>
       <canvas id="expenseChart" height="160"></canvas>
     </div>
     <div class="card p-4 mb-4">
@@ -278,11 +279,11 @@
       </h3>
       <div class="flex items-center gap-2">
         <span class="text-xs text-gray-500 whitespace-nowrap">100 =</span>
-        <input id="exchange-rate" type="number" step="0.1" value="21"
+        <input id="exchange-rate" type="number" step="0.1" value="23"
                class="border border-gray-200 rounded-lg px-2 py-1.5 text-sm w-24 text-center focus:outline-none focus:border-oki-ocean"
                onchange="saveExchangeRate()" />
         <span class="text-xs text-gray-500">NT$</span>
-        <span class="text-xs text-gray-400 ml-auto">(100 ≈ NT$21)</span>
+        <span id="rate-hint" class="text-xs text-gray-400 ml-auto">¥100 ≈ NT$23</span>
       </div>
     </div>
     <div class="card p-4 mb-4">
@@ -296,7 +297,7 @@
         <button class="btn-primary" onclick="calcConvert()"><i class="fa-solid fa-equals"></i></button>
       </div>
       <div id="calc-result" class="text-sm text-gray-600 bg-oki-mist rounded-lg px-3 py-2 hidden">
-        <span class="font-bold text-oki-coral" id="calc-jpy">0</span>
+        <span class="font-bold text-oki-coral">¥<span id="calc-jpy">0</span></span>
         <span class="text-gray-400 mx-2">=</span>
         <span class="font-bold text-oki-ocean" id="calc-twd">NT$0</span>
       </div>
@@ -415,6 +416,11 @@
         class="border border-gray-200 rounded-lg p-3 text-sm w-full focus:outline-none focus:border-oki-ocean resize-none"
         placeholder="輸入備忘事項，URL 將自動轉為連結..."
         oninput="saveMemo()"></textarea>
+      <div class="flex justify-end mt-1">
+        <button onclick="clearMemo()" class="text-xs text-gray-400 hover:text-red-400 transition flex items-center gap-1">
+          <i class="fa-solid fa-trash-can text-[10px]"></i> 清除備忘錄
+        </button>
+      </div>
       <div id="memo-preview" class="mt-2 text-sm text-gray-600 bg-oki-mist rounded-lg p-3 leading-relaxed"></div>
     </div>
   </section>
@@ -439,7 +445,7 @@
         </a>
       </div>
       <div class="mt-3 bg-oki-mist rounded-lg p-3">
-        <p class="text-xs text-gray-500">🌡️ 沖繩 5-6 月均溫：<strong>25~30C</strong>，梅雨季需備雨具</p>
+        <p class="text-xs text-gray-500">🌡️ 沖繩 5～6 月均溫：<strong>25～30°C</strong>，梅雨季需備雨具</p>
         <p class="text-xs text-gray-500 mt-1">🌊 海邊注意潛水安全，青之洞窟建議上午時段前往</p>
       </div>
     </div>
@@ -657,7 +663,7 @@ const GUIDE_DATA = [
     subtitle: '透明藍色奇境  陽光折射的夢幻光芒',
     icon: '🌊', tags: ['潛水', '自然', '讀谷'],
     intro: '青之洞窟是真榮田岬海底的天然熔岩洞窟，陽光穿透海面折射入洞，形成令人屏息的藍色光束。洞內水質清澈見底，熱帶魚穿梭其中，是沖繩最具代表性的浮潛與體驗潛水景點。',
-    facts: ['洞內光線反射海底白沙，使水色呈現特殊深藍','建議上午 1012 時前往，光線入射角度最美','水深約 510 公尺，初學者可選擇體驗潛水','旺季（68 月）人潮眾多，建議提前預約導遊'],
+    facts: ['洞內光線反射海底白沙，使水色呈現特殊深藍','建議上午 10～12 時前往，光線入射角度最美','水深約 5～10 公尺，初學者可選擇體驗潛水','旺季（6～8 月）人潮眾多，建議提前預約導遊'],
     mapQuery: '青之洞窟 沖繩',
     mapEmbed: 'https://www.openstreetmap.org/export/embed.html?bbox=127.777%2C26.446%2C127.807%2C26.466&layer=mapnik'
   },
@@ -877,6 +883,8 @@ renderGuide();
 function saveExchangeRate() {
   ratePerHundred = parseFloat(document.getElementById('exchange-rate').value) || 23;
   localStorage.setItem(LS + '_rate', ratePerHundred.toString());
+  var hint = document.getElementById('rate-hint');
+  if (hint) hint.textContent = '¥100 ≈ NT$' + ratePerHundred.toFixed(1);
 }
 
 function calcConvert() {
@@ -886,7 +894,7 @@ function calcConvert() {
     if (!/^[\d\s\+\-\*\/\(\)\.]+$/.test(input)) throw new Error('invalid');
     var jpy = Function('"use strict"; return (' + input + ')')();
     var twd = (jpy * ratePerHundred / 100).toFixed(0);
-    document.getElementById('calc-jpy').textContent = '' + Number(jpy).toLocaleString();
+    document.getElementById('calc-jpy').textContent = Number(jpy).toLocaleString();
     document.getElementById('calc-twd').textContent = 'NT$' + Number(twd).toLocaleString();
     document.getElementById('calc-result').classList.remove('hidden');
   } catch(e) { alert('請輸入合法算式，例如：500+200*3'); }
@@ -1048,6 +1056,14 @@ function saveMemo() {
   localStorage.setItem(LS + '_memo', memoText);
   renderMemoPreview();
 }
+function clearMemo() {
+  if (!memoText || confirm('確定清除備忘錄內容？')) {
+    memoText = '';
+    document.getElementById('memo-text').value = '';
+    localStorage.setItem(LS + '_memo', '');
+    renderMemoPreview();
+  }
+}
 function renderMemoPreview() {
   if (!memoText) { document.getElementById('memo-preview').innerHTML = ''; return; }
   var linked = memoText.replace(/(https?:\/\/[^\s]+)/g, '<a href="$1" target="_blank" class="text-oki-ocean underline break-all">$1</a>');
@@ -1091,7 +1107,17 @@ function updateDashboard() {
   var dayTotals = dayKeys.map(function(d) {
     return expenses.filter(function(e) { return e.date === d; }).reduce(function(s, e) { return s + (e.jpy || 0); }, 0);
   });
-  var ctx = document.getElementById('expenseChart').getContext('2d');
+  var canvas = document.getElementById('expenseChart');
+  var noDataEl = document.getElementById('chart-no-data');
+  if (dayTotals.every(function(v){ return v === 0; })) {
+    canvas.style.display = 'none';
+    if (noDataEl) noDataEl.style.display = 'block';
+    if (expenseChart) { expenseChart.destroy(); expenseChart = null; }
+    return;
+  }
+  canvas.style.display = '';
+  if (noDataEl) noDataEl.style.display = 'none';
+  var ctx = canvas.getContext('2d');
   if (expenseChart) expenseChart.destroy();
   expenseChart = new Chart(ctx, {
     type: 'bar',
@@ -1118,7 +1144,7 @@ function updateHeaderExpense() {
   var now      = new Date();
   var todayStr = (now.getMonth() + 1) + '/' + now.getDate();
   var todayJpy = expenses.filter(function(e) { return e.date === todayStr; }).reduce(function(s, e) { return s + (e.jpy || 0); }, 0);
-  document.getElementById('header-today-expense').textContent = '' + todayJpy.toLocaleString();
+  document.getElementById('header-today-expense').textContent = todayJpy.toLocaleString();
 }
 
 // 
