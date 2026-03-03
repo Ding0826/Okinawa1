@@ -207,6 +207,16 @@
       </div>
       <p id="chart-no-data" class="text-center text-xs text-gray-400 py-6">尚無花費資料，趕快記帳吧 🐾</p>
       <canvas id="expenseChart" height="160"></canvas>
+      <div id="pie-chart-section" class="mt-3" style="display:none">
+        <div class="border-t border-gray-100 pt-3">
+          <p class="text-xs font-bold text-gray-500 mb-2 flex items-center gap-1">
+            <i class="fa-solid fa-chart-pie text-oki-coral"></i> 類別花費比例
+          </p>
+          <div style="position:relative;height:220px;">
+            <canvas id="expensePieChart"></canvas>
+          </div>
+        </div>
+      </div>
     </div>
     <div class="card p-4 mb-4">
       <h3 class="font-bold text-sm text-gray-600 mb-3 flex items-center gap-2">
@@ -311,6 +321,7 @@
           <div>
             <label class="text-xs text-gray-500 mb-0.5 block">日期</label>
             <select id="exp-date" class="border border-gray-200 rounded-lg px-2 py-1.5 text-xs w-full focus:outline-none focus:border-oki-ocean">
+              <option value="行前">✈️ 行前花費</option>
               <option value="5/28">5/28 (四)</option>
               <option value="5/29">5/29 (五)</option>
               <option value="5/30">5/30 (六)</option>
@@ -367,6 +378,7 @@
         <div class="flex gap-2">
           <select id="filter-date" class="text-xs border border-gray-200 rounded px-1.5 py-1 focus:outline-none" onchange="renderExpenses()">
             <option value="all">全部日期</option>
+            <option value="行前">行前</option>
             <option value="5/28">5/28</option>
             <option value="5/29">5/29</option>
             <option value="5/30">5/30</option>
@@ -713,12 +725,14 @@ let expenses    = JSON.parse(localStorage.getItem(LS + '_expenses') || '[]');
 let checkStates = JSON.parse(localStorage.getItem(LS + '_checks')   || '{}');
 let memoText    = localStorage.getItem(LS + '_memo') || '';
 let ratePerHundred = parseFloat(localStorage.getItem(LS + '_rate') || '23');
+let diaryData      = JSON.parse(localStorage.getItem(LS + '_diary') || '{}');
 
 function saveAll() {
   localStorage.setItem(LS + '_expenses', JSON.stringify(expenses));
   localStorage.setItem(LS + '_checks',   JSON.stringify(checkStates));
   localStorage.setItem(LS + '_memo',     memoText);
   localStorage.setItem(LS + '_rate',     ratePerHundred.toString());
+  localStorage.setItem(LS + '_diary',    JSON.stringify(diaryData));
 }
 
 function jpyToTwd(jpy) { return (jpy * ratePerHundred / 100).toFixed(0); }
@@ -727,7 +741,7 @@ function jpyToTwd(jpy) { return (jpy * ratePerHundred / 100).toFixed(0); }
 // JSON BACKUP
 // 
 function exportJson() {
-  const data = { expenses, checkStates, memo: memoText, rate: ratePerHundred };
+  const data = { expenses, checkStates, memo: memoText, rate: ratePerHundred, diary: diaryData };
   const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
   const a = document.createElement('a');
   a.href = URL.createObjectURL(blob);
@@ -746,7 +760,8 @@ function importJson(event) {
       if (data.expenses !== undefined) expenses = data.expenses;
       if (data.checkStates !== undefined) checkStates = data.checkStates;
       if (data.memo !== undefined) memoText = data.memo;
-      if (data.rate !== undefined) ratePerHundred = data.rate;
+      if (data.rate  !== undefined) ratePerHundred = data.rate;
+      if (data.diary !== undefined) diaryData = data.diary;
       saveAll();
       alert('✅ 匯入成功！頁面即將重新載入。');
       location.reload();
@@ -831,7 +846,34 @@ function renderPlan() {
       '</div></div>';
   });
   html += '</div>';
+  // ── 日記區塊 ──
+  var diaryKey = data.day;
+  html += '<div class="card p-4 mt-3">' +
+    '<h3 class="font-bold text-sm text-oki-teal mb-2 flex items-center gap-2">' +
+    '<i class="fa-solid fa-book-open-reader"></i> ' + diaryKey + ' 旅遊日記</h3>' +
+    '<textarea id="diary-' + diaryKey + '" rows="5" ' +
+    'class="border border-gray-200 rounded-lg p-3 text-sm w-full focus:outline-none focus:border-oki-ocean resize-none" ' +
+    'placeholder="記錄今天的旅遊心情、特別時刻與難忘回憶..."></textarea>' +
+    '<div class="flex items-center justify-between mt-2">' +
+    '<span class="text-xs text-gray-400 italic" id="diary-status-' + diaryKey + '">輸入後自動儲存</span>' +
+    '<div class="flex gap-1.5">' +
+    '<button onclick="copyDiary(\'' + diaryKey + '\')" class="btn-coral text-xs" id="diary-copy-' + diaryKey + '">' +
+    '<i class="fa-regular fa-copy mr-1"></i> 複製</button>' +
+    '<button onclick="saveDiary(\'' + diaryKey + '\')" class="btn-primary text-xs">' +
+    '<i class="fa-solid fa-floppy-disk mr-1"></i> 儲存</button>' +
+    '</div></div></div>';
   container.innerHTML = html;
+  // 載入既有日記內容
+  var diaryEl = document.getElementById('diary-' + diaryKey);
+  if (diaryEl) {
+    diaryEl.value = diaryData[diaryKey] || '';
+    diaryEl.addEventListener('input', function() {
+      diaryData[diaryKey] = diaryEl.value;
+      saveAll();
+      var st = document.getElementById('diary-status-' + diaryKey);
+      if (st) st.textContent = '✓ 已自動儲存';
+    });
+  }
 }
 
 function autoSelectToday() {
@@ -848,6 +890,48 @@ function autoSelectToday() {
 }
 autoSelectToday();
 renderPlan();
+
+// 
+// DIARY
+// 
+function saveDiary(key) {
+  var ta = document.getElementById('diary-' + key);
+  if (!ta) return;
+  diaryData[key] = ta.value;
+  saveAll();
+  var btn = document.querySelector('[onclick="saveDiary(\'' + key + '\')"');
+  if (btn) {
+    var orig = btn.innerHTML;
+    btn.innerHTML = '<i class="fa-solid fa-check mr-1"></i> 已儲存！';
+    btn.disabled = true;
+    setTimeout(function() { btn.innerHTML = orig; btn.disabled = false; }, 1500);
+  }
+  var st = document.getElementById('diary-status-' + key);
+  if (st) st.textContent = '✓ 已儲存';
+}
+
+function copyDiary(key) {
+  var ta = document.getElementById('diary-' + key);
+  if (!ta || !ta.value.trim()) {
+    alert('日記內容為空，無法複製。');
+    return;
+  }
+  navigator.clipboard.writeText(ta.value).then(function() {
+    var btn = document.getElementById('diary-copy-' + key);
+    if (btn) {
+      var orig = btn.innerHTML;
+      btn.innerHTML = '<i class="fa-solid fa-check mr-1"></i> 已複製！';
+      btn.disabled = true;
+      setTimeout(function() { btn.innerHTML = orig; btn.disabled = false; }, 1500);
+    }
+  }).catch(function() {
+    // fallback for older browsers
+    ta.select();
+    document.execCommand('copy');
+    var st = document.getElementById('diary-status-' + key);
+    if (st) st.textContent = '✓ 已複製到剪貼簿';
+  });
+}
 
 // 
 // GUIDE
@@ -1017,8 +1101,8 @@ function compressImage(file, maxSize, quality) {
 // 
 // CHECKLISTS
 // 
-var CARRY_ITEMS = ['護照','日幣/台幣','行動電源','相機','隱形眼鏡','網卡(日本)','水壺','耳機','各項憑證','外套','防曬乳','帽子','面紙/濕紙巾','信用卡','泳裝'];
-var CHECK_ITEMS = ['換洗衣物 3-4套','鞋子/涼鞋','充電器/充電線','盥洗用具','內衣褲','雨具','延長線','個人藥品','保養品','防曬噴霧','行李秤','轉接頭','塑膠袋','衣架','口罩','棉花棒'];
+var CARRY_ITEMS = ['護照','日幣/台幣','行動電源','相機','隱形眼鏡','網卡(日本)','水壺','耳機','各項憑證','外套','防曬乳','帽子','面紙/濕紙巾','信用卡','御朱印','駕照/日文譯本'];
+var CHECK_ITEMS = ['換洗衣物 3-4套','鞋子/涼鞋','充電器/充電線','盥洗用具','內衣褲','雨具','延長線','個人藥品','保養品','防曬噴霧','行李秤','轉接頭','塑膠袋','衣架','口罩','棉花棒','泳裝'];
 
 function renderChecklist(items, containerId, keyPrefix, progressId) {
   var container = document.getElementById(containerId);
@@ -1073,7 +1157,8 @@ function renderMemoPreview() {
 // 
 // DASHBOARD
 // 
-var expenseChart = null;
+var expenseChart    = null;
+var expensePieChart = null;
 
 function updateDashboard() {
   var now      = new Date();
@@ -1103,7 +1188,8 @@ function updateDashboard() {
       }).join('');
   }
 
-  var dayKeys   = ['5/28','5/29','5/30','5/31','6/1'];
+  var dayKeys   = ['行前','5/28','5/29','5/30','5/31','6/1'];
+  var dayLabels  = ['行前','5/28','5/29','5/30','5/31','6/1'];
   var dayTotals = dayKeys.map(function(d) {
     return expenses.filter(function(e) { return e.date === d; }).reduce(function(s, e) { return s + (e.jpy || 0); }, 0);
   });
@@ -1113,6 +1199,9 @@ function updateDashboard() {
     canvas.style.display = 'none';
     if (noDataEl) noDataEl.style.display = 'block';
     if (expenseChart) { expenseChart.destroy(); expenseChart = null; }
+    var pieSec0 = document.getElementById('pie-chart-section');
+    if (pieSec0) pieSec0.style.display = 'none';
+    if (expensePieChart) { expensePieChart.destroy(); expensePieChart = null; }
     return;
   }
   canvas.style.display = '';
@@ -1122,9 +1211,9 @@ function updateDashboard() {
   expenseChart = new Chart(ctx, {
     type: 'bar',
     data: {
-      labels: dayKeys,
-      datasets: [{ label: '每日花費 ()', data: dayTotals,
-        backgroundColor: ['#2F7FB8','#0097A7','#2F7FB8','#FF8B5C','#0097A7'], borderRadius: 6 }]
+      labels: dayLabels,
+      datasets: [{ label: '花費 (¥)', data: dayTotals,
+        backgroundColor: ['#9C59D1','#2F7FB8','#0097A7','#2F7FB8','#FF8B5C','#0097A7'], borderRadius: 6 }]
     },
     options: {
       responsive: true,
@@ -1138,6 +1227,47 @@ function updateDashboard() {
       }
     }
   });
+
+  // ── 圓餅圖：花費類別比例 ──
+  var CAT_LIST   = ['🍽️ 餐飲','🎫 門票','🛍️ 購物','🚗 交通','🏨 住宿','💊 其他'];
+  var CAT_COLORS = ['#FF8B5C','#2F7FB8','#FF6FA5','#0097A7','#7A7D85','#F5A623'];
+  var catTotals  = CAT_LIST.map(function(cat) {
+    return expenses.filter(function(e){ return e.cat === cat; }).reduce(function(s,e){ return s+(e.jpy||0); }, 0);
+  });
+  var pieSection = document.getElementById('pie-chart-section');
+  var pieCanvas  = document.getElementById('expensePieChart');
+  if (!catTotals.some(function(v){ return v > 0; })) {
+    if (pieSection) pieSection.style.display = 'none';
+    if (expensePieChart) { expensePieChart.destroy(); expensePieChart = null; }
+  } else {
+    if (pieSection) pieSection.style.display = '';
+    var pLabels = [], pData = [], pColors = [];
+    CAT_LIST.forEach(function(cat, i) {
+      if (catTotals[i] > 0) { pLabels.push(cat); pData.push(catTotals[i]); pColors.push(CAT_COLORS[i]); }
+    });
+    var pieCtx = pieCanvas.getContext('2d');
+    if (expensePieChart) expensePieChart.destroy();
+    expensePieChart = new Chart(pieCtx, {
+      type: 'doughnut',
+      data: {
+        labels: pLabels,
+        datasets: [{ data: pData, backgroundColor: pColors, borderWidth: 2, borderColor: '#fff', hoverOffset: 8 }]
+      },
+      options: {
+        responsive: true, maintainAspectRatio: false,
+        plugins: {
+          legend: { position: 'bottom', labels: { font: { size: 10 }, padding: 10, boxWidth: 12, usePointStyle: true } },
+          tooltip: { callbacks: {
+            label: function(ctx) {
+              var total = ctx.dataset.data.reduce(function(a,b){ return a+b; }, 0);
+              var pct = (ctx.raw / total * 100).toFixed(1);
+              return ctx.label + ': ¥' + ctx.raw.toLocaleString() + ' (' + pct + '%)';
+            }
+          }}
+        }
+      }
+    });
+  }
 }
 
 function updateHeaderExpense() {
