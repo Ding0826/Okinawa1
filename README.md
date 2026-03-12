@@ -42,6 +42,8 @@ DASH 頁最下方 → **匯出 JSON** 可下載備份檔案
 - **Netlify Drop**：拖曳 `index.html` 至 [netlify.com/drop](https://netlify.com/drop)，30 秒取得公開網址
 - **GitHub Pages**：push 至 repo，Settings → Pages 啟用
 - **區網分享**：查詢本機 IP，手機連 `http://192.168.x.x:5500`
+- **更新注意**：更新git之後 要再執行git push upstream main，才會推到私人git帳號
+
 
 ---
 
